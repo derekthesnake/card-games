@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package cards;
+
+message Play {
+	repeated int32 card = 1;
+}
