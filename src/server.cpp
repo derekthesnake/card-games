@@ -6,6 +6,7 @@
 #include "protos/message.pb.h"
 
 int main() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
     /* ws->getUserData returns one of these */
     struct PerSocketData {
       //Game game;
@@ -14,6 +15,7 @@ int main() {
     Game g = Game{[](cards::Message m) {
       std::cout << "In the worker!" << std::endl;
       std::cout << m.test() << std::endl;
+      std::cout << "after printing the msg" << std::endl;
     }};
     /* Simple echo websocket server, using multiple threads */
     std::vector<std::thread *> threads(std::thread::hardware_concurrency());
@@ -34,10 +36,16 @@ int main() {
 		  
                 },
                 .message = [&](auto *ws, std::string_view message, uWS::OpCode opCode) {
-		  std::cout << "adding message to queue " << message << std::endl;
-		  cards::Message m;
-		  m.ParseFromString(std::string{message});
+		  std::cout << "adding message to queue " << std::string{message} << std::endl;
+		  std::shared_ptr<cards::Message> m = std::make_shared<cards::Message>();
+		  if (m->ParseFromString(std::string{message})) {
+		    std::cout << "PFS worked" << std::endl;
+		  } else {
+		    std::cout << "PFS failed" << std::endl;
+		  }
+		  std::cout << "m test in producer: " << m->test() << std::endl;
 		  g.add_message(m);
+		  std::cout << "m addr in producer: " << &*m << std::endl;
 		  ws->send("ack", opCode);
                 },
                 .drain = [](auto */*ws*/) {

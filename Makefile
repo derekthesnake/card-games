@@ -7,7 +7,7 @@ CFLAGS = -std=c++20 -flto -lz
 
 default: src/server.cpp src/protos/message.pb.cc src/protos/message.pb.h src/game.h
 #	$(CC) hello-world.cpp -o hello_world $(C_INCS) $(C_OBJS) $(CFLAGS)
-	$(CC) src/server.cpp -o test src/protos/message.pb.cc $(C_OBJS) $(C_INCS) $(CFLAGS) `pkg-config --cflags --libs protobuf`
+	$(CC) src/server.cpp -o server src/protos/message.pb.cc $(C_OBJS) $(C_INCS) $(CFLAGS) `pkg-config --cflags --libs protobuf`
 
 dependencies:
 	make -C uWebSockets
