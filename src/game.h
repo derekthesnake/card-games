@@ -17,7 +17,9 @@ games need a way to communicate total state to the clients (think reconnecting)
 #include <queue>
 #include <memory>
 
+#include <log.h>
 #include <protos/message.pb.h>
+
 
 struct Game {
 private:
@@ -32,18 +34,19 @@ private:
     while(true) {
       std::unique_lock lk = std::unique_lock(mutex);
       notifier.wait(lk);
-      std::cout << "queue size is " << msg_queue.size() << std::endl;
+      logging::debug() << "testing debug" << std::endl;
+      logging::debug() << "queue size is " << msg_queue.size() << std::endl;
       std::shared_ptr<cards::Message> m = msg_queue.front();
-      std::cout << "m addr in process_msgs: " << &*m << std::endl;
-      std::cout << "in loop: m.test.length = " << m->test().length() << std::endl;
+      //      logging::debug() << "m addr in process_msgs: " << std::string(&m) << std::endl;
+      logging::debug() << "in loop: m.test.length = " << m->test().length() << std::endl;
       processor(*m);
       msg_queue.pop();
     }
   }
   
 public:
-Game(void (* fn)(cards::Message)) : processor(fn) {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
+  Game(void (* fn)(cards::Message)) : processor(fn) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     std::thread worker = std::thread([this] {
 	process_messages();
       });
@@ -52,12 +55,14 @@ Game(void (* fn)(cards::Message)) : processor(fn) {
   // is any work in the destructor necessary for the thread? not sure
   //~Game()
   void add_message(std::shared_ptr<cards::Message> m) {
-    std::cout << "game queue add rcvd " << &*m << std::endl;
-    std::cout << "in GQ: m.test = " << m->test() << std::endl;
+    logging::debug() << "game queue add received message addr " << &*m << std::endl;
+    logging::debug() << "m.test = " << m->test() << std::endl;
     std::unique_lock lk = std::unique_lock(mutex);
+    logging::debug() << "acquired the queue lock" << std::endl;
     msg_queue.push(m);
-    std::cout << "added m to queue" << std::endl;
+    logging::debug() << "added m to queue" << std::endl;
     lk.unlock();
+    logging::debug() << "unlocked lock, notifying waiters" << std::endl;
     notifier.notify_one();
   }  
 };
