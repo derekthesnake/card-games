@@ -21,6 +21,8 @@ games need a way to communicate total state to the clients (think reconnecting)
 #include <protos/message.pb.h>
 
 
+// Considering the possibility of moving to a priority queue based on message timestamp.
+
 struct Game {
 private:
   // TODO: some sort of game state
@@ -32,15 +34,24 @@ private:
 
   std::function<void(cards::Message)> process_messages() {
     while(true) {
-      std::unique_lock lk = std::unique_lock(mutex);
-      notifier.wait(lk);
-      logging::debug() << "testing debug" << std::endl;
-      logging::debug() << "queue size is " << msg_queue.size() << std::endl;
-      std::shared_ptr<cards::Message> m = msg_queue.front();
-      //      logging::debug() << "m addr in process_msgs: " << std::string(&m) << std::endl;
-      logging::debug() << "in loop: m.test.length = " << m->test().length() << std::endl;
+      std::shared_ptr<cards::Message> m;
+      {
+	while(true) {
+	  logging::debug() << "test" << std::endl;
+	}
+	std::unique_lock lk = std::unique_lock(mutex);
+	notifier.wait(lk);
+	logging::debug() << "testing debug" << std::endl;
+	logging::debug() << "queue size is " << msg_queue.size() << std::endl;
+	m = msg_queue.front();
+	msg_queue.pop();
+	logging::debug() << "in loop: m.test.length = " << m->test().length() << std::endl;
+	logging::debug() << "in loop: m.test = " << m->test() << std::endl;
+      }
+      logging::debug() << "outside the lock context, lock should be released" << std::endl;
+      logging::debug() << "calling processor function" << std::endl;
       processor(*m);
-      msg_queue.pop();
+      logging::debug() << "done with processor function, back in the loop" << std::endl;
     }
   }
   

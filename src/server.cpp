@@ -3,16 +3,25 @@
 #include <algorithm>
 
 #include "game.h"
+#include "player-data.h"
 #include "protos/message.pb.h"
 
 int main() {
   logging::log_level = logging::DEBUG;
+
+  {
+    std::time_t now = std::time(nullptr);
+    logging::info() << "Game server started at " << std::asctime(std::localtime(&now)); // implicit newline
+  }
   
   int listen_port = 9001;
+  logging::debug() << "Listen port set to " << listen_port << std::endl;
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  
   /* ws->getUserData returns one of these */
   struct PerSocketData {
-    //Game game;
+    Game * game;
+    PlayerData playerData;
   };
 
   Game g = Game{[](cards::Message m) {
@@ -35,10 +44,17 @@ int main() {
 	  .maxBackpressure = 1 * 1024 * 1024,
 	  /* Handlers */
 	  .upgrade = nullptr,
-	  .open = [](auto */*ws*/) {
-	    
+	  .open = [](auto * ws) {
+	    logging::info() << "open() called" << std::endl;
+	    PlayerData p = ws->getUserData()->playerData;
+	    logging::debug() << "about to dereference playerdata" << std::endl;
+	    logging::debug() << "playerdata.id = " << p.id << std::endl;
+	    logging::debug() << "it worked" << std::endl;
 	  },
 	  .message = [&](auto *ws, std::string_view message, uWS::OpCode opCode) {
+	    // auth: discard all messages from sockets where the user in userdata hasn't been set
+	    // exception for the login message
+	    logging::info() << "message(" << ws << ", " << message << ", " << opCode << ") called" << std::endl;
 	    logging::debug() << "adding message to queue " << std::string{message} << std::endl;
 	    std::shared_ptr<cards::Message> m = std::make_shared<cards::Message>();
 	    if (m->ParseFromString(std::string{message})) {
@@ -53,19 +69,20 @@ int main() {
 	  },
 	  .drain = [](auto */*ws*/) {
 	    /* Check getBufferedAmount here */
+	    logging::info() << "drain called" << std::endl;
 	  },
 	  .ping = [](auto */*ws*/, std::string_view) {
-	    
+	    logging::info() << "ping called" << std::endl;
 	  },
 	  .pong = [](auto */*ws*/, std::string_view) {
-	    
+	    logging::info() << "pong called" << std:: endl;
 	  },
-	  .close = [](auto */*ws*/, int /*code*/, std::string_view /*message*/) {
-	    
+	  .close = [](auto *ws, int code, std::string_view message) {
+	    logging::info() << "close(" << ws << ", " << code << ", " << message << ") called" << std::endl;
 	  }
 	}).listen(listen_port, [listen_port](auto *listen_socket) {
 	  if (listen_socket) {
-	    logging::info() << "Thread " << std::this_thread::get_id() << " listening on port " + listen_port << std::endl;
+	    logging::info() << "Thread " << std::this_thread::get_id() << " listening on port " << listen_port << std::endl;
 	  } else {
 	    logging::error() << "Thread " << std::this_thread::get_id() << " failed to listen on port " << listen_port << std::endl;
 	  }
