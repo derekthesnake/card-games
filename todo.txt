@@ -1,0 +1,5 @@
+[X] Messages are mangled (at least when sending thru websocat)
+[ ] Logging is formatted weird, complete the transition to ymd
+[X] Add mutex to logging so output is legible
+[ ] Address timezone issues
+[ ] Maybe add timeout to log waiting, so that deadlocks don't happen (hard)

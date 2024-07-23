@@ -36,22 +36,19 @@ private:
     while(true) {
       std::shared_ptr<cards::Message> m;
       {
-	while(true) {
-	  logging::debug() << "test" << std::endl;
-	}
 	std::unique_lock lk = std::unique_lock(mutex);
 	notifier.wait(lk);
-	logging::debug() << "testing debug" << std::endl;
-	logging::debug() << "queue size is " << msg_queue.size() << std::endl;
+	logging::debug() << "testing debug" << logging::endl;
+	logging::debug() << "queue size is " << msg_queue.size() << logging::endl;
 	m = msg_queue.front();
 	msg_queue.pop();
-	logging::debug() << "in loop: m.test.length = " << m->test().length() << std::endl;
-	logging::debug() << "in loop: m.test = " << m->test() << std::endl;
+	logging::debug() << "in loop: m.test.length = " << m->test().length() << logging::endl;
+	logging::debug() << "in loop: m.test = " << m->test() << logging::endl;
       }
-      logging::debug() << "outside the lock context, lock should be released" << std::endl;
-      logging::debug() << "calling processor function" << std::endl;
+      logging::debug() << "outside the lock context, lock should be released" << logging::endl;
+      logging::debug() << "calling processor function" << logging::endl;
       processor(*m);
-      logging::debug() << "done with processor function, back in the loop" << std::endl;
+      logging::debug() << "done with processor function, back in the loop" << logging::endl;
     }
   }
   
@@ -66,14 +63,14 @@ public:
   // is any work in the destructor necessary for the thread? not sure
   //~Game()
   void add_message(std::shared_ptr<cards::Message> m) {
-    logging::debug() << "game queue add received message addr " << &*m << std::endl;
-    logging::debug() << "m.test = " << m->test() << std::endl;
+    logging::debug() << "game queue add received message addr " << &*m << logging::endl;
+    logging::debug() << "m.test = " << m->test() << logging::endl;
     std::unique_lock lk = std::unique_lock(mutex);
-    logging::debug() << "acquired the queue lock" << std::endl;
+    logging::debug() << "acquired the queue lock" << logging::endl;
     msg_queue.push(m);
-    logging::debug() << "added m to queue" << std::endl;
+    logging::debug() << "added m to queue" << logging::endl;
     lk.unlock();
-    logging::debug() << "unlocked lock, notifying waiters" << std::endl;
+    logging::debug() << "unlocked lock, notifying waiters" << logging::endl;
     notifier.notify_one();
   }  
 };
