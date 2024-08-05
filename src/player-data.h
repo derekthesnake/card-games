@@ -5,10 +5,12 @@ will be used as the UserData struct in the websocket
 
 */
 
-struct PlayerData {
+template <typename MessageType>
+class PlayerData {
   // TODO better way to identify users and let them reconnect
+ public:
   int id;
-  struct Game * game;
+  struct Game<MessageType> * game;
 
   PlayerData() {
     this->id = 101;

@@ -20,11 +20,11 @@ int main() {
   
   /* ws->getUserData returns one of these */
   struct PerSocketData {
-    Game * game;
-    PlayerData playerData;
+    Game<cards::Message> * game;
+    PlayerData<cards::Message> playerData;
   };
 
-  Game g = Game{[](cards::Message m) {
+  Game<cards::Message> g = Game<cards::Message>{[](cards::Message m) {
     logging::debug() << "In the worker!" << logging::endl;
     logging::message() << m.test() << logging::endl;
     logging::debug() << "after printing the msg" << logging::endl;
@@ -46,7 +46,7 @@ int main() {
 	  .upgrade = nullptr,
 	  .open = [](auto * ws) {
 	    logging::info() << "open() called" << logging::endl;
-	    PlayerData p = ws->getUserData()->playerData;
+	    PlayerData<cards::Message> p = ws->getUserData()->playerData;
 	    logging::debug() << "about to dereference playerdata" << logging::endl;
 	    logging::debug() << "playerdata.id = " << p.id << logging::endl;
 	    logging::debug() << "it worked" << logging::endl;
@@ -64,7 +64,6 @@ int main() {
 	    }
 	    logging::debug() << "m test in producer: " + m->test() << logging::endl;
 	    g.add_message(m);
-	    //logging::debug("m addr in producer: " + &*m);
 	    ws->send("ack", opCode);
 	  },
 	  .drain = [](auto */*ws*/) {

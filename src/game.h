@@ -23,18 +23,19 @@ games need a way to communicate total state to the clients (think reconnecting)
 
 // Considering the possibility of moving to a priority queue based on message timestamp.
 
-struct Game {
+template <typename MessageType>
+class Game {
 private:
   // TODO: some sort of game state
 
-  std::queue<std::shared_ptr<cards::Message>> msg_queue;
+  std::queue<std::shared_ptr<MessageType>> msg_queue;
   std::mutex mutex;
   std::condition_variable notifier;
-  std::function<void(cards::Message)> processor;
+  std::function<void(MessageType)> processor;
 
-  std::function<void(cards::Message)> process_messages() {
+  std::function<void(MessageType)> process_messages() {
     while(true) {
-      std::shared_ptr<cards::Message> m;
+      std::shared_ptr<MessageType> m;
       {
 	std::unique_lock lk = std::unique_lock(mutex);
 	notifier.wait(lk);
@@ -53,7 +54,7 @@ private:
   }
   
 public:
-  Game(void (* fn)(cards::Message)) : processor(fn) {
+  Game(void (* fn)(MessageType)) : processor(fn) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     std::thread worker = std::thread([this] {
 	process_messages();
@@ -62,7 +63,7 @@ public:
   }
   // is any work in the destructor necessary for the thread? not sure
   //~Game()
-  void add_message(std::shared_ptr<cards::Message> m) {
+  void add_message(std::shared_ptr<MessageType> m) {
     logging::debug() << "game queue add received message addr " << &*m << logging::endl;
     logging::debug() << "m.test = " << m->test() << logging::endl;
     std::unique_lock lk = std::unique_lock(mutex);

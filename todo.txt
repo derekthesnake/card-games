@@ -1,5 +1,73 @@
 [X] Messages are mangled (at least when sending thru websocat)
-[ ] Logging is formatted weird, complete the transition to ymd
+[X] Logging is formatted weird, complete the transition to ymd
 [X] Add mutex to logging so output is legible
 [ ] Address timezone issues
 [ ] Maybe add timeout to log waiting, so that deadlocks don't happen (hard)
+[ ] Define 500 "state machine"
+[ ] Implement 500 state machine
+[ ] Handle login
+[ ] Define what a game session/lobby looks like
+[ ] Implement game session/lobby
+[ ] Implement reconnection to lobby/session
+[ ] Make server an object/method library to be used by each game
+
+
+500 state machine:
+
+START -> DEAL
+   - no actions needed (maybe ready?)
+
+DEAL -> BIDDING(select starting bidder)
+   - no actions needed from player
+   - server distributes cards
+
+BIDDING -> TRICK
+   - first player bid is required
+   - following players can pass or raise
+   - bidding complete after 3 passes in a row
+
+TRICK -> TRICK | SCORING
+   - first player leads
+   - three players follow suit
+   - check # of hands - could lead to DEAL or END
+   - winner of the hand deals
+
+SCORING(bidding team, W/L) -> DEAL | END
+   - add/sub the bid value from the team's score
+   - if points > 500 or < 500, go to END
+   - else go to DEAL
+
+END.
+
+==============================
+
+server message flow
+
+DEAL
+send out all hands
+broadcast which player is first bidder
+
+BIDDING
+inform first bidder to begin bidding
+listen for first bidder's bid, broadcast bid
+listen for next bid and broadcast
+       repeat until three consecutive pass bids seen
+send the pot cards to the winning bidder
+wait for bidder to transmit their discards
+
+TRICK
+leading player plays a card, send it out
+next plays a card, check legality, send it out
+next plays a card, check legality, send it out
+last plays a card, check legality, send it out
+if going to repeat hand
+check if bid is satisfied or satisfiable
+      (include check for the 10 trick thing)
+if it is, go to SCORING
+if not, go to END
+
+NECESSARY ACTIONS
+- card played (user, card)
+- bid made (user, card meaning value)
+- synchronize (no user, card set*, points)
+
