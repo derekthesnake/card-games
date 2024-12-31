@@ -6,9 +6,9 @@ WS_OBJS = uWebSockets/uSockets/*.o
 CFLAGS = -std=c++20 -flto -lz
 PBFLAGS = `pkg-config --cflags --libs protobuf`
 
-default: src/server.cpp src/protos/message.pb.cc src/protos/message.pb.h src/game.h src/log.h src/player-data.h
+default: src/500.cpp src/server.hpp src/protos/message.pb.cc src/protos/message.pb.h src/game.h src/log.h src/player-data.h
 #	$(CC) hello-world.cpp -o hello_world $(C_INCS) $(WS_OBJS) $(CFLAGS)
-	$(CC) src/server.cpp -o server src/protos/message.pb.cc $(WS_OBJS) $(C_INCS) $(CFLAGS) $(PBFLAGS)
+	$(CC) src/500.cpp -o server src/protos/message.pb.cc $(WS_OBJS) $(C_INCS) $(CFLAGS) $(PBFLAGS)
 
 dependencies:
 	make -C uWebSockets

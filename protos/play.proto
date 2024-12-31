@@ -5,3 +5,14 @@ package cards;
 message Play {
 	repeated int32 card = 1;
 }
+
+Enum msgType {
+	SYNC = 1;
+	HAND = 2;
+	PLAY = 3;
+}
+
+message 500msg {
+	MessageType msgType = 1;
+	optional Play = 2;
+}

@@ -10,7 +10,7 @@
 [ ] Implement game session/lobby
 [ ] Implement reconnection to lobby/session
 [ ] Make server an object/method library to be used by each game
-
+[ ] Define options for 500
 
 500 state machine:
 
@@ -42,6 +42,11 @@ END.
 ==============================
 
 server message flow
+
+START
+coordinate lobby joining (?)
+readying up (?)
+send message to go to dealing
 
 DEAL
 send out all hands

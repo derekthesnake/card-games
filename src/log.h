@@ -1,5 +1,9 @@
+#ifndef cards_logging
+#define cards_logging
+
 #include <chrono>
 #include <iomanip>
+#include <iostream>
 #include <semaphore>
 #include <source_location>
 #include <string_view>
@@ -112,3 +116,5 @@ namespace logging {
     // lock is not released until logging::endl is called
   }
 }
+
+#endif
