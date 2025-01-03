@@ -2,17 +2,20 @@ syntax = "proto3";
 
 package cards;
 
+option go_package = "card-games/protos";
+
 message Play {
 	repeated int32 card = 1;
 }
 
-Enum msgType {
-	SYNC = 1;
-	HAND = 2;
-	PLAY = 3;
+enum MessageType {
+	MSG_T_SYNC = 0;
+	MSG_T_HAND = 1;
+	MSG_T_PLAY = 2;
 }
 
-message 500msg {
-	MessageType msgType = 1;
-	optional Play = 2;
+message FiveHundredMessage {
+	MessageType msg_type = 1;
+	int32 player_id = 2;
+	optional Play cards = 3;
 }

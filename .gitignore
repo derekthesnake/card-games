@@ -1,1 +1,13 @@
-src/protos/*
+backend/src/protos/*
+gui/protos/*
+*.binpb
+*.pb.h
+*.pb.cc
+*.pb.go
+*.o
+*.so
+*.exe
+*.out
+
+server
+make-test
