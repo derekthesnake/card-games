@@ -11,6 +11,10 @@ separate thread will consume the queue, updating state and broadcasting action t
 games need a way to communicate total state to the clients (think reconnecting)
 
 */
+
+#ifndef cards_game
+#define cards_game
+
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -18,7 +22,6 @@ games need a way to communicate total state to the clients (think reconnecting)
 #include <memory>
 
 #include <log.h>
-#include <protos/message.pb.h>
 
 
 // Considering the possibility of moving to a priority queue based on message timestamp.
@@ -33,7 +36,8 @@ private:
   std::condition_variable notifier;
   std::function<void(MessageType)> processor;
 
-  std::function<void(MessageType)> process_messages() {
+  //std::function<void(MessageType)>
+  void worker_loop() {
     while(true) {
       std::shared_ptr<MessageType> m;
       {
@@ -48,18 +52,21 @@ private:
       }
       logging::debug() << "outside the lock context, lock should be released" << logging::endl;
       logging::debug() << "calling processor function" << logging::endl;
-      processor(*m);
+      process_message(*m);
       logging::debug() << "done with processor function, back in the loop" << logging::endl;
     }
   }
   
 public:
-  Game(void (* fn)(MessageType)) : processor(fn) {
-    GOOGLE_PROTOBUF_VERIFY_VERSION;
+  Game() {
+    //GOOGLE_PROTOBUF_VERIFY_VERSION;
     std::thread worker = std::thread([this] {
-	process_messages();
+	worker_loop();
       });
     worker.detach();
+  }
+  void process_message(MessageType m) {
+    logging::message() << m.DebugString() << logging::endl;
   }
   // is any work in the destructor necessary for the thread? not sure
   //~Game()
@@ -73,5 +80,14 @@ public:
     lk.unlock();
     logging::debug() << "unlocked lock, notifying waiters" << logging::endl;
     notifier.notify_one();
-  }  
+  }
+
+  //  void register_user(
 };
+
+
+template<typename T, typename M>
+concept GamePair = std::is_base_of<Game<M>, T>::value;
+
+#endif
+//cards_game

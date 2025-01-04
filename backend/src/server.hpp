@@ -4,14 +4,16 @@
 #include "App.h"
 #include <thread>
 #include <algorithm>
+#include <type_traits>
 
 #include "game.h"
 #include "player-data.h"
 #include "protos/message.pb.h"
 
 namespace server {
-  template <class MessageProto>
-  void serve(void (*gameFunction)(MessageProto)) {
+  template <class ConcreteGame, class ProtoBufType> requires GamePair <ConcreteGame, ProtoBufType>
+  void serve() {
+    //static_assert(std::is_base_of_v<Game, ConcreteGame>, "Argument must be a subclass of Game");
     logging::log_level = logging::DEBUG;
 
     {
@@ -25,11 +27,11 @@ namespace server {
   
     /* ws->getUserData returns one of these */
     struct PerSocketData {
-      Game<cards::Message> * game;
-      PlayerData<cards::Message> playerData;
+      PlayerData<ConcreteGame> playerData;
     };
 
-    Game<cards::Message> g = Game<cards::Message>{gameFunction};
+    // temporary, figure out lobby stuff
+    ConcreteGame g;
   
     /* Simple echo websocket server, using multiple threads */
     std::vector<std::thread *> threads(std::thread::hardware_concurrency());
@@ -45,12 +47,25 @@ namespace server {
 	      .idleTimeout = 10,
 	      .maxBackpressure = 1 * 1024 * 1024,
 	      /* Handlers */
-	      .upgrade = nullptr,
+	      .upgrade = [](auto *res, auto *req, auto *context) {
+		/* when reading from req, must COPY data out. req dies soon. */
+		logging::debug() << "Upgrade hook called" << logging::endl;
+		std::string hwid = std::string(req->getHeader("card-games-hwid"));
+		res->template upgrade<PerSocketData>({
+		    PlayerData<ConcreteGame>(hwid)
+		  },
+		  req->getHeader("sec-websocket-key"),
+		  req->getHeader("sec-websocket-protocol"),
+		  req->getHeader("sec-websocket-extensions"),
+		  context);
+	      },
 	      .open = [](auto * ws) {
+		
 		logging::info() << "open() called" << logging::endl;
+		/*
 		PlayerData<cards::Message> p = ws->getUserData()->playerData;
 		logging::debug() << "about to dereference playerdata" << logging::endl;
-		logging::debug() << "playerdata.id = " << p.id << logging::endl;
+		logging::debug() << "playerdata.id = " << p.id << logging::endl; */
 		logging::debug() << "it worked" << logging::endl;
 	      },
 	      .message = [&](auto *ws, std::string_view message, uWS::OpCode opCode) {
@@ -58,7 +73,7 @@ namespace server {
 		// except for the login message
 		logging::info() << "message(" << ws << ", " << message << ", " << opCode << ") called" << logging::endl;
 		logging::debug() << "adding message to queue " << std::string{message} << logging::endl;
-		std::shared_ptr<cards::Message> m = std::make_shared<cards::Message>();
+		std::shared_ptr<ProtoBufType> m = std::make_shared<ProtoBufType>();
 		if (m->ParseFromString(std::string{message})) {
 		  logging::debug() << "PFS worked" << logging::endl;
 		} else {

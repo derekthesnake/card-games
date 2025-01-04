@@ -1,11 +1,14 @@
 #include "log.h"
 #include "server.hpp"
+#include "game.h"
 
-void process_message(cards::Message m) {
-  logging::debug() << "In the TEMPLATED worker!" << logging::endl;
-  logging::message() << m.test() << logging::endl;
-  logging::debug() << "after printing the msg" << logging::endl;
-}
+class FiveHundred : public Game<cards::Message> {
+  void process_message(cards::Message m) {
+    logging::debug() << "In the TEMPLATED worker!" << logging::endl;
+    logging::message() << m.test() << logging::endl;
+    logging::debug() << "after printing the msg" << logging::endl;
+  }
+};
 int main() {
-  server::serve(process_message);
+  server::serve<FiveHundred, cards::Message>();
 }

@@ -4,17 +4,23 @@ Player data
 will be used as the UserData struct in the websocket
 
 */
+#include <memory>
 
-template <typename MessageType>
+#include "game.h"
+
+template <class ConcreteGame>
+class PlayerData;
+
+template <class ConcreteGame>
 class PlayerData {
   // TODO better way to identify users and let them reconnect
  public:
-  int id;
-  struct Game<MessageType> * game;
+  std::string id;
+  std::shared_ptr<ConcreteGame> game;
 
-  PlayerData() {
-    this->id = 101;
-    this->game = nullptr;
+  PlayerData(std::string& id) : id(id) {
   }
+
+  PlayerData(){}
 
 };

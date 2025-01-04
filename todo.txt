@@ -5,7 +5,7 @@
 [ ] Maybe add timeout to log waiting, so that deadlocks don't happen (hard)
 [ ] Define 500 "state machine"
 [ ] Implement 500 state machine
-[ ] Handle login
+[ ] Handle login - register user/ws pairs with Game instance?
 [ ] Define what a game session/lobby looks like
 [ ] Implement game session/lobby
 [ ] Implement reconnection to lobby/session
@@ -44,8 +44,9 @@ END.
 server message flow
 
 START
-coordinate lobby joining (?)
-readying up (?)
+coordinate lobby joining (server code)
+readying up (server code)
+<start game>
 send message to go to dealing
 
 DEAL
@@ -71,8 +72,16 @@ check if bid is satisfied or satisfiable
 if it is, go to SCORING
 if not, go to END
 
-NECESSARY ACTIONS
+NECESSARY ACTIONS FOR GAME
 - card played (user, card)
 - bid made (user, card meaning value)
 - synchronize (no user, card set*, points)
 
+NECESSARY ACTIONS FOR SERVER
+- create lobby (receive ID)
+- join lobby by ID
+- mark player as ready
+- leave lobby
+
+NECESSARY API FOR GAME OBJ
+- broadcast to all players
