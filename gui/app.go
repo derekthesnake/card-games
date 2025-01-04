@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/coder/websocket"
 	"time"
+	"net/http"
 )
 
 func buttonPress() {
@@ -18,8 +19,14 @@ func buttonPress() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	
-	c, _, err := websocket.Dial(ctx, "ws://localhost:9001", nil)
+
+	dialopts := websocket.DialOptions{
+		HTTPHeader : map[string][]string{
+			http.CanonicalHeaderKey("card-games-hwid"): []string{"testing"},
+		},
+	}
+
+	c, _, err := websocket.Dial(ctx, "ws://localhost:9001", &dialopts)
 
 	if err != nil {
 		log.Fatal(err)
