@@ -1,3 +1,6 @@
+#ifndef cards_player_data
+#define cards_player_data
+
 /*
 Player data
 
@@ -17,6 +20,7 @@ class PlayerData {
  public:
   std::string id;
   std::shared_ptr<ConcreteGame> game;
+  uWS::WebSocket<false, true, PlayerData<ConcreteGame>> * socket;
 
   PlayerData(std::string& id) : id(id) {
   }
@@ -24,3 +28,6 @@ class PlayerData {
   PlayerData(){}
 
 };
+
+#endif
+// cards_player_data

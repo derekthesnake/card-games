@@ -21,10 +21,14 @@ games need a way to communicate total state to the clients (think reconnecting)
 #include <queue>
 #include <memory>
 
-#include <log.h>
+#include "log.h"
+#include "player-data.h"
 
 
-// Considering the possibility of moving to a priority queue based on message timestamp.
+
+template <typename MessageType>
+class Game;
+
 
 template <typename MessageType>
 class Game {
@@ -34,7 +38,7 @@ private:
   std::queue<std::shared_ptr<MessageType>> msg_queue;
   std::mutex mutex;
   std::condition_variable notifier;
-  std::function<void(MessageType)> processor;
+  std::map<std::string, uWS::WebSocket<false, true, PlayerData<Game<MessageType>>> *> player_map;
 
   //std::function<void(MessageType)>
   void worker_loop() {
@@ -47,6 +51,8 @@ private:
 	logging::debug() << "queue size is " << msg_queue.size() << logging::endl;
 	m = msg_queue.front();
 	msg_queue.pop();
+
+
 	logging::debug() << "in loop: m.test.length = " << m->test().length() << logging::endl;
 	logging::debug() << "in loop: m.test = " << m->test() << logging::endl;
       }
@@ -82,7 +88,30 @@ public:
     notifier.notify_one();
   }
 
-  //  void register_user(
+  bool register_player(std::string id, uWS::WebSocket<false, true, PlayerData<Game<MessageType>>> * socket) {
+    if (player_map.contains(id)) {
+      logging::debug() << "Duplicate ID " << id << " joining Game instance." << logging::endl;
+      // TODO: send message back to client about failing to join
+      return false;
+    } else {
+      // TODO: have lobbies have a code that the client can see
+      player_map[id] = socket;
+      logging::debug() << "Successfully inserted player '" << id << "' into Game instance." << logging::endl;
+      return true;
+    }
+  }
+
+  bool deregister_player(std::string id) {
+    if (!player_map.contains(id)) {
+      logging::debug() << "Attempt to remove nonexistent player '" << id << "' from Game instance." << logging::endl;
+      return false;
+    } else {
+      logging::debug() << "Removing player '" << id << "' from Game instance." << logging::endl;
+      player_map.erase(id);
+      return true;
+    }
+  }
+
 };
 
 
