@@ -3,7 +3,7 @@
 #include "game.h"
 
 class FiveHundred : public Game<cards::Message> {
-  void process_message(cards::Message m) {
+  void process_message(cards::Message m) override {
     logging::debug() << "In the TEMPLATED worker!" << logging::endl;
     logging::message() << m.test() << logging::endl;
     logging::debug() << "after printing the msg" << logging::endl;

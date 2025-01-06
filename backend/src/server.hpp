@@ -27,7 +27,7 @@ namespace server {
   
     /* ws->getUserData returns one of these */
     struct PerSocketData {
-      PlayerData<ConcreteGame> playerData;
+      PlayerData<Game<ProtoBufType>> playerData;
     };
 
     /* Simple echo websocket server, using multiple threads */
@@ -36,7 +36,7 @@ namespace server {
     std::transform(threads.begin(), threads.end(), threads.begin(), [&](std::thread */*t*/) {
       return new std::thread([&]() {
 	/* Very simple WebSocket echo server */
-	uWS::App().ws<PlayerData<ConcreteGame>>("/*", {
+	uWS::App().ws<PlayerData<Game<ProtoBufType>>>("/*", {
 	    /* Settings */
 	    .compression = uWS::SHARED_COMPRESSOR,
 	      .maxPayloadLength = 16 * 1024,
@@ -48,8 +48,7 @@ namespace server {
 		logging::debug() << "Upgrade hook called" << logging::endl;
 		std::string hwid = std::string(req->getHeader("card-games-hwid"));
 		res->template upgrade<PerSocketData>({
-		    PlayerData<ConcreteGame>(hwid)
-		  },
+		    PlayerData<Game<ProtoBufType>>(hwid)},
 		  req->getHeader("sec-websocket-key"),
 		  req->getHeader("sec-websocket-protocol"),
 		  req->getHeader("sec-websocket-extensions"),

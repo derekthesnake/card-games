@@ -71,8 +71,8 @@ public:
       });
     worker.detach();
   }
-  void process_message(MessageType m) {
-    logging::message() << m.DebugString() << logging::endl;
+  virtual void process_message(MessageType m) {
+    logging::message() << "m in the Game base class: " << m.DebugString() << logging::endl;
   }
   // is any work in the destructor necessary for the thread? not sure
   //~Game()
